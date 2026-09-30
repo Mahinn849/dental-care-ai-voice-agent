@@ -1,0 +1,1019 @@
+/* ==========================================================================
+   CareVoice AI - Modern Minimalist Voice Agent Interface
+   Pixel-perfect match to minimalist aesthetic reference
+   ========================================================================== */
+
+:root {
+  --page-bg: #EEF1F6;
+  --window-bg: #FAFBFC;
+  --card-bg: #FFFFFF;
+  --text-main: #1E293B;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  --border-light: #E2E8F0;
+  --border-subtle: #EDF2F7;
+  
+  --primary-blue: #3B82F6;
+  --primary-blue-bg: #EEF2FF;
+  --bubble-ai: #F1F4F9;
+  --bubble-user: #EAF1FB;
+  
+  --call-red: #FF4D4F;
+  --call-red-hover: #F53B3E;
+  --call-red-shadow: rgba(255, 77, 79, 0.35);
+  
+  --call-green: #10B981;
+  --call-green-hover: #059669;
+  --call-green-shadow: rgba(16, 185, 129, 0.35);
+  
+  --success: #10B981;
+  --danger: #EF4444;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius-window: 24px;
+  --radius-card: 20px;
+  --radius-bubble: 18px;
+  --radius-full: 9999px;
+  
+  --shadow-window: 0 20px 60px -15px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(226, 232, 240, 0.8);
+  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.03);
+  --shadow-btn: 0 6px 18px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.03);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--page-bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-image: 
+    radial-gradient(circle at 10% 15%, rgba(59, 130, 246, 0.05) 0%, transparent 35%),
+    radial-gradient(circle at 90% 85%, rgba(16, 185, 129, 0.04) 0%, transparent 35%);
+}
+
+/* ==========================================================================
+   Outer Window Container (App Frame)
+   ========================================================================== */
+.window-frame {
+  width: 100%;
+  max-width: 1140px;
+  min-height: 720px;
+  background: var(--window-bg);
+  border-radius: var(--radius-window);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-window);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Window Titlebar */
+.window-titlebar {
+  height: 54px;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.soundwave-logo {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 18px;
+}
+
+.soundwave-logo .bar {
+  width: 3px;
+  background: #0F172A;
+  border-radius: 4px;
+  display: inline-block;
+  animation: waveBar 1.2s ease-in-out infinite alternate;
+}
+
+.soundwave-logo .bar-1 { height: 8px; animation-delay: 0.1s; }
+.soundwave-logo .bar-2 { height: 16px; animation-delay: 0.3s; }
+.soundwave-logo .bar-3 { height: 12px; animation-delay: 0.2s; }
+.soundwave-logo .bar-4 { height: 6px; animation-delay: 0.4s; }
+
+@keyframes waveBar {
+  0% { transform: scaleY(0.7); }
+  100% { transform: scaleY(1.3); }
+}
+
+.app-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.clinic-subtag {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: #EEF2F6;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.win-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.win-btn:hover {
+  background: #E2E8F0;
+  color: var(--text-main);
+}
+
+.win-btn.close-btn:hover {
+  background: #FEE2E2;
+  color: #EF4444;
+}
+
+/* Error Banner */
+.error-banner {
+  background: #FEF2F2;
+  border-bottom: 1px solid #FCA5A5;
+  color: #B91C1C;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: slideDown 0.25s ease;
+}
+
+.error-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #B91C1C;
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Main Content Layout: 2 Columns
+   ========================================================================== */
+.agent-main-container {
+  display: grid;
+  grid-template-columns: 42% 58%;
+  flex: 1;
+  padding: 1.75rem 2rem 2rem 2rem;
+  gap: 2rem;
+  min-height: 660px;
+}
+
+@media (max-width: 960px) {
+  .agent-main-container {
+    grid-template-columns: 1fr;
+    padding: 1.25rem;
+  }
+}
+
+/* ==========================================================================
+   LEFT COLUMN: 3D Robot Mascot & Call Controls
+   ========================================================================== */
+.left-agent-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.5rem 1rem 0.5rem;
+  position: relative;
+}
+
+/* Top Live Call Status Pill */
+.live-call-status-pill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+.status-pulse-dot.active {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.call-timer-display {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+/* Center 3D Robot Visualizer */
+.robot-visualizer-container {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.robot-card-wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  animation: floatRobot 4s ease-in-out infinite alternate;
+}
+
+@keyframes floatRobot {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-7px); }
+}
+
+.robot-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 28px;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Glowing Aura Behind Robot when Sophia Speaks */
+.robot-glow-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 80%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(147, 197, 253, 0.1) 50%, transparent 70%);
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.robot-glow-aura.speaking {
+  opacity: 1;
+  animation: auraPulse 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes auraPulse {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.95; }
+}
+
+/* Bottom Call Controls Row */
+.call-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.ctrl-btn {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-btn);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-main);
+  outline: none;
+}
+
+.ctrl-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.ctrl-btn:active {
+  transform: translateY(0);
+}
+
+.ctrl-btn.circle-btn {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+}
+
+.ctrl-svg {
+  width: 22px;
+  height: 22px;
+  color: #334155;
+  transition: color 0.2s ease;
+}
+
+/* Mic Button States */
+#mic-toggle-btn.mic-active {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: #F0FDF4;
+}
+
+#mic-toggle-btn.mic-active .ctrl-svg {
+  color: var(--success);
+}
+
+#mic-toggle-btn.mic-speaking {
+  border-color: rgba(16, 185, 129, 0.8);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2), var(--shadow-btn);
+}
+
+#mic-toggle-btn.mic-muted {
+  background: #FEF2F2;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+#mic-toggle-btn.mic-muted .ctrl-svg {
+  color: var(--danger);
+}
+
+/* Main Call Action Pill Button */
+.call-action-pill {
+  width: 84px;
+  height: 58px;
+  border-radius: 29px;
+  border: none;
+}
+
+/* Call Inactive: Friendly Green Start Call */
+.call-action-pill.call-idle {
+  background: var(--call-green);
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px var(--call-green-shadow);
+}
+
+.call-action-pill.call-idle:hover {
+  background: var(--call-green-hover);
+  box-shadow: 0 10px 28px var(--call-green-shadow);
+}
+
+/* Call Active: Vibrant Coral Red End Call (matches user screenshot) */
+.call-action-pill.call-active {
+  background: var(--call-red);
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px var(--call-red-shadow);
+}
+
+.call-action-pill.call-active:hover {
+  background: var(--call-red-hover);
+  box-shadow: 0 10px 28px var(--call-red-shadow);
+}
+
+.call-svg {
+  width: 26px;
+  height: 26px;
+  transition: transform 0.3s ease;
+}
+
+.call-action-pill.call-active .call-svg {
+  transform: rotate(135deg); /* Turns phone into hang-up position */
+}
+
+/* Call Status Caption Under Controls */
+.call-status-caption {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.caption-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.sub-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-light);
+}
+
+.sub-dot.active {
+  background: var(--success);
+}
+
+.caption-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: Live Transcript Card
+   ========================================================================== */
+.right-transcript-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.transcript-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 580px;
+  max-height: 640px;
+  overflow: hidden;
+}
+
+/* Transcript Card Header */
+.transcript-header {
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+}
+
+.transcript-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.doc-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+}
+
+.doc-icon-badge svg {
+  width: 17px;
+  height: 17px;
+}
+
+.transcript-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+/* Recording Status Pill */
+.recording-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #F8FAFC;
+  border: 1px solid var(--border-light);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.rec-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-light);
+}
+
+.recording-pill.active .rec-dot {
+  background: var(--success);
+  animation: pulseGreen 1.8s infinite;
+}
+
+.recording-pill.active {
+  color: var(--text-main);
+}
+
+/* Transcript Body (Scrollable Chat Area) */
+.transcript-body {
+  flex: 1;
+  padding: 1.25rem 1.4rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  scroll-behavior: smooth;
+  background: #FFFFFF;
+}
+
+.transcript-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.transcript-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.transcript-body::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 4px;
+}
+
+.transcript-body::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
+
+/* Welcome System Intro Box */
+.transcript-system-msg {
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.clinic-intro-card {
+  background: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  max-width: 440px;
+}
+
+.clinic-intro-card h3 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.35rem;
+}
+
+.clinic-intro-card p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 0.75rem;
+}
+
+.clinic-info-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.clinic-info-chips span {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #475569;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+}
+
+/* ==========================================================================
+   Chat Messages: AI (Sophia) & User (You)
+   ========================================================================== */
+.msg-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  animation: fadeInMsg 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInMsg {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Message Metadata Row (Avatar, Name, Timestamp) */
+.msg-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.msg-author-info {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.msg-author-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.msg-timestamp {
+  font-size: 0.74rem;
+  color: var(--text-light);
+  font-variant-numeric: tabular-nums;
+}
+
+/* AI Message Styling */
+.msg-wrapper.assistant {
+  align-items: flex-start;
+}
+
+.ai-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-blue-bg);
+  color: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.msg-bubble.assistant-bubble {
+  background: var(--bubble-ai);
+  color: var(--text-main);
+  padding: 13px 18px;
+  border-radius: var(--radius-bubble);
+  border-top-left-radius: 4px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  max-width: 85%;
+  word-break: break-word;
+}
+
+/* User Message Styling (Right Aligned) */
+.msg-wrapper.user {
+  align-items: flex-end;
+}
+
+.msg-meta.user-meta {
+  width: 100%;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #334155;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+}
+
+.msg-bubble.user-bubble {
+  background: var(--bubble-user);
+  color: var(--text-main);
+  padding: 13px 18px;
+  border-radius: var(--radius-bubble);
+  border-top-right-radius: 4px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  max-width: 85%;
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   Retell-Style Tool Call Execution Badges & Drawers (Matching Retell Reference)
+   ========================================================================== */
+.retell-tool-event {
+  margin: 0.35rem 0;
+  width: 100%;
+  max-width: 90%;
+  animation: fadeInMsg 0.2s ease;
+  font-family: var(--font-family);
+}
+
+.retell-tool-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.retell-tool-header:hover {
+  background-color: rgba(15, 23, 42, 0.05);
+}
+
+.retell-wrench-icon {
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+}
+
+.retell-wrench-icon.wrench-success {
+  color: #10B981;
+}
+
+.retell-wrench-icon.wrench-fail {
+  color: #EF4444;
+}
+
+.retell-tool-text {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.retell-tool-text.text-success {
+  color: #059669;
+  font-weight: 600;
+}
+
+.retell-tool-text.text-fail {
+  color: #DC2626;
+  font-weight: 600;
+}
+
+.tool-name-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #1E293B;
+  font-weight: 600;
+}
+
+.retell-chevron {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  font-weight: 600;
+  margin-left: 2px;
+  transition: transform 0.15s ease;
+}
+
+.retell-chevron.open {
+  color: #64748B;
+}
+
+.retell-tool-text.text-success + .retell-chevron {
+  color: #059669;
+}
+
+.retell-tool-text.text-fail + .retell-chevron {
+  color: #DC2626;
+}
+
+.retell-tool-drawer {
+  margin: 0.35rem 0 0.5rem 1.4rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.76rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  animation: fadeInMsg 0.15s ease;
+}
+
+.retell-field {
+  margin-bottom: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  color: #64748B;
+}
+
+.retell-field-label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.retell-field-val {
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.retell-code-box {
+  margin-top: 4px;
+  padding: 7px 10px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: #0F172A;
+  overflow-x: auto;
+  max-height: 200px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Partial Live Speech Preview */
+.partial-live-preview {
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: fadeInMsg 0.2s ease;
+}
+
+.partial-speaker-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--primary-blue);
+}
+
+.pulse-wave-icon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary-blue);
+  animation: pulseGreen 1.5s infinite;
+}
+
+.partial-live-text {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Options Modal Popup
+   ========================================================================== */
+.options-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInMsg 0.2s ease;
+}
+
+.options-modal-content {
+  background: #FFFFFF;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 380px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.options-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.options-header h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.options-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-action-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background: #F8FAFC;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.modal-action-btn:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+
+.clinic-info-block {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  background: #F8FAFC;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+}
+
+.clinic-info-block strong {
+  color: var(--text-main);
+}
+
+.tech-stack-tag {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--primary-blue);
+  font-weight: 500;
+}

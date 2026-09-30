@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareVoice AI — Dental Clinic CRM & Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css?v=20260929_1">
+</head>
+<body>
+
+  <div class="crm-layout">
+    
+    <!-- ====================================================================
+         LEFT SIDEBAR
+         ==================================================================== -->
+    <aside class="crm-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon-box">🦷</div>
+        <div class="brand-info">
+          <h2>CareVoice <span class="brand-sparkle">✦</span></h2>
+          <span class="brand-subtitle">AI RECEPTIONIST CRM</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-tab="overview">
+          <div class="nav-item-left">
+            <span class="nav-icon">📊</span>
+            <span>Overview</span>
+          </div>
+        </div>
+
+        <div class="nav-item" data-tab="leads">
+          <div class="nav-item-left">
+            <span class="nav-icon">📥</span>
+            <span>Lead Inbox</span>
+          </div>
+          <span class="nav-badge" id="badge-leads">0</span>
+        </div>
+
+        <div class="nav-item" data-tab="calls">
+          <div class="nav-item-left">
+            <span class="nav-icon">📞</span>
+            <span>AI Calls</span>
+          </div>
+        </div>
+
+        <div class="nav-item" data-tab="appointments">
+          <div class="nav-item-left">
+            <span class="nav-icon">📋</span>
+            <span>Appointments</span>
+          </div>
+        </div>
+
+        <div class="nav-item" data-tab="calendar">
+          <div class="nav-item-left">
+            <span class="nav-icon">📅</span>
+            <span>Calendar</span>
+          </div>
+        </div>
+
+        <div class="nav-item" data-tab="patients">
+          <div class="nav-item-left">
+            <span class="nav-icon">👥</span>
+            <span>Patients</span>
+          </div>
+        </div>
+
+        <div class="nav-item" data-tab="followups">
+          <div class="nav-item-left">
+            <span class="nav-icon">⏰</span>
+            <span>Follow-ups</span>
+          </div>
+          <span class="nav-badge amber" id="badge-followups">0</span>
+        </div>
+
+        <div class="nav-item" data-tab="analytics">
+          <div class="nav-item-left">
+            <span class="nav-icon">📈</span>
+            <span>Analytics</span>
+          </div>
+        </div>
+
+        <div class="nav-item" data-tab="integrations">
+          <div class="nav-item-left">
+            <span class="nav-icon">⚡</span>
+            <span>Integrations</span>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-card">
+          <div class="profile-left">
+            <div class="profile-avatar">HA</div>
+            <div class="profile-meta">
+              <h4>Hamayoon</h4>
+              <p>Dental Clinic Admin</p>
+            </div>
+          </div>
+          <button class="logout-btn" id="logout-btn" title="Log out">⏏</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         MAIN APP CONTAINER
+         ==================================================================== -->
+    <main class="crm-main">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="crm-header">
+        <div class="header-search">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="global-search" placeholder="Search leads, transcripts, patients, notes...">
+        </div>
+
+        <div class="header-right">
+          <div class="integration-pills-bar">
+            <div class="integ-pill">
+              <span class="dot-status pulse"></span>
+              <span>CareVoice AI</span>
+            </div>
+            <div class="integ-pill">
+              <span class="dot-status"></span>
+              <span>AssemblyAI STT</span>
+            </div>
+            <div class="integ-pill">
+              <span class="dot-status"></span>
+              <span>n8n Webhook</span>
+            </div>
+            <div class="integ-pill">
+              <span class="dot-status"></span>
+              <span>Google Sheets</span>
+            </div>
+            <div class="integ-pill">
+              <span class="dot-status"></span>
+              <span>Google Calendar</span>
+            </div>
+          </div>
+
+          <div class="live-sync-pill">
+            <span class="dot-status pulse"></span>
+            <span id="live-sync-text">Live Sync</span>
+          </div>
+
+          <button class="sync-refresh-btn" id="refresh-sync-btn" title="Sync System">↻</button>
+
+          <a href="/" target="_blank" class="open-voice-pill" title="Open patient voice call phone">
+            <span>📞</span> Open Voice Phone
+          </a>
+        </div>
+      </header>
+
+      <!-- ================================================================
+           VIEW 1: OVERVIEW (Reference Image 1)
+           ================================================================ -->
+      <section class="view-container active" id="view-overview">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>AI Receptionist CRM Dashboard</h1>
+            <p>Real-time clinic operations across voice calls, Retell-style AI interactions, and appointment bookings.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-primary" id="btn-open-create-apt">
+              <span>+</span> Add Appointment
+            </button>
+            <button class="btn-secondary" id="btn-sync-overview">
+              <span>↻</span> Sync System
+            </button>
+          </div>
+        </div>
+
+        <!-- 8 Metric Cards Grid (4x2) -->
+        <div class="metrics-grid">
+          <!-- Card 1 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Total Inquiries & Leads</span>
+              <div class="metric-icon-badge">👥</div>
+            </div>
+            <div class="metric-value" id="stat-total-leads">0</div>
+            <div class="metric-badge">
+              <span>↗</span> Realtime capture
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">New Unacted Requests</span>
+              <div class="metric-icon-badge">📩</div>
+            </div>
+            <div class="metric-value" id="stat-unacted-leads">0</div>
+            <div class="metric-badge amber">
+              <span>🔥</span> Pending review
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Voice Calls Placed</span>
+              <div class="metric-icon-badge">📞</div>
+            </div>
+            <div class="metric-value" id="stat-calls-placed">0</div>
+            <div class="metric-badge blue">
+              <span>↗</span> Web voice pipeline
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Vocal Calls Completed</span>
+              <div class="metric-icon-badge">✅</div>
+            </div>
+            <div class="metric-value" id="stat-calls-completed">0</div>
+            <div class="metric-badge">
+              <span>✓</span> Logged in GSheets
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Appointments Booked</span>
+              <div class="metric-icon-badge">📅</div>
+            </div>
+            <div class="metric-value" id="stat-appointments-booked">0</div>
+            <div class="metric-badge">
+              <span>✓</span> GCal slots synced
+            </div>
+          </div>
+
+          <!-- Card 6 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Book Conversion Rate</span>
+              <div class="metric-icon-badge">📈</div>
+            </div>
+            <div class="metric-value" id="stat-conversion-rate">0%</div>
+            <div class="metric-badge blue">
+              <span>↗</span> Target 40% goal
+            </div>
+          </div>
+
+          <!-- Card 7 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Today's Active Slots</span>
+              <div class="metric-icon-badge">🕒</div>
+            </div>
+            <div class="metric-value" id="stat-today-slots">0</div>
+            <div class="metric-badge">
+              <span>●</span> Absolute Dental
+            </div>
+          </div>
+
+          <!-- Card 8 -->
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Failed / Missed Calls</span>
+              <div class="metric-icon-badge">⚠️</div>
+            </div>
+            <div class="metric-value" id="stat-missed-calls">0</div>
+            <div class="metric-badge red">
+              <span>↺</span> Follow-up retry
+            </div>
+          </div>
+        </div>
+
+        <!-- Lower Section (Conversion Funnel & Pipeline Health) -->
+        <div class="overview-bottom-grid">
+          
+          <!-- Funnel Panel -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h3>Operational Conversion Funnel</h3>
+                <p>Tracking patient lead journey from voice call to confirmed calendar appointment.</p>
+              </div>
+              <span class="metric-badge blue" id="funnel-rate-badge">0% Overall Booking Rate</span>
+            </div>
+
+            <div class="funnel-container">
+              <div class="funnel-step">
+                <div>
+                  <span class="step-num">01</span>
+                  <div class="step-name">New Inquiries</div>
+                  <div class="step-count" id="funnel-step-1">0</div>
+                </div>
+                <div class="step-bar-wrap">
+                  <div class="step-bar-fill" id="bar-funnel-1" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <div class="funnel-step">
+                <div>
+                  <span class="step-num">02</span>
+                  <div class="step-name">Calls Placed</div>
+                  <div class="step-count" id="funnel-step-2">0</div>
+                </div>
+                <div class="step-bar-wrap">
+                  <div class="step-bar-fill" id="bar-funnel-2" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="funnel-step">
+                <div>
+                  <span class="step-num">03</span>
+                  <div class="step-name">Dialogues Completed</div>
+                  <div class="step-count" id="funnel-step-3">0</div>
+                </div>
+                <div class="step-bar-wrap">
+                  <div class="step-bar-fill" id="bar-funnel-3" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="funnel-step">
+                <div>
+                  <span class="step-num">04</span>
+                  <div class="step-name">Appointments Booked</div>
+                  <div class="step-count" id="funnel-step-4">0</div>
+                </div>
+                <div class="step-bar-wrap">
+                  <div class="step-bar-fill" id="bar-funnel-4" style="width: 0%; background: var(--status-green);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pipeline Health Panel -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h3>Automation Pipeline Health</h3>
+                <p>Real-time microservice & webhook execution states.</p>
+              </div>
+              <span class="health-badge" id="pipeline-overall-badge">Active</span>
+            </div>
+
+            <div class="pipeline-health-list" id="pipeline-health-container">
+              <!-- Dynamically populated via check_pipeline_health -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 2: CALENDAR (Operational Practice Grid - Reference Image 2)
+           ================================================================ -->
+      <section class="view-container" id="view-calendar">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Operational Practice Grid</h1>
+            <p>Interactive month view of registered and confirmed treatment schedules during clinic hours.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-primary" id="btn-add-cal-event">+ Book Slot</button>
+          </div>
+        </div>
+
+        <div class="calendar-banner-pill">
+          <div class="calendar-banner-left">
+            <div class="cal-doc-badge">📅</div>
+            <div class="cal-banner-title">
+              <h4>Operational Schedules Calendar</h4>
+              <p>Real-time room/routing syncs with Google Calendar API & n8n webhook</p>
+            </div>
+          </div>
+          <div class="calendar-legend-chips">
+            <div class="legend-chip">
+              <span class="dot-status" style="background: #10B981;"></span>
+              <span>Confirmed Treatment</span>
+            </div>
+            <div class="legend-chip">
+              <span class="dot-status" style="background: #F59E0B;"></span>
+              <span>n8n/Pending Holds</span>
+            </div>
+            <div class="legend-chip">
+              <span class="dot-status" style="background: #3B82F6;"></span>
+              <span>Treatment Completed</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cal-nav-bar">
+          <h2 class="cal-month-title" id="cal-month-heading">October 2026</h2>
+          <div class="cal-nav-controls">
+            <span class="clinic-hours-tag">Clinic Hours: 8:00 AM - 5:00 PM (Mon - Fri)</span>
+            <button class="btn-secondary" id="cal-today-btn">Today</button>
+            <button class="nav-arrow-btn" id="cal-prev-btn">&lt;</button>
+            <button class="nav-arrow-btn" id="cal-next-btn">&gt;</button>
+          </div>
+        </div>
+
+        <div class="calendar-grid-card">
+          <div class="cal-header-row">
+            <div class="cal-header-cell">SUN</div>
+            <div class="cal-header-cell">MON</div>
+            <div class="cal-header-cell">TUE</div>
+            <div class="cal-header-cell">WED</div>
+            <div class="cal-header-cell">THU</div>
+            <div class="cal-header-cell">FRI</div>
+            <div class="cal-header-cell">SAT</div>
+          </div>
+          <div class="cal-body-grid" id="cal-body-grid">
+            <!-- Dynamically populated 35 or 42 calendar day cells -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 3: ANALYTICS (Reference Image 3)
+           ================================================================ -->
+      <section class="view-container" id="view-analytics">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Clinic Analytics & Operational Insights</h1>
+            <p>Real operational metrics computed from voice assistant runs and scheduled treatments.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-secondary" id="btn-refresh-analytics">↻ Refresh Analytics</button>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+          <!-- Chart 1: System Growth Inflow Trend -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>System Growth Inflow Trend</h3>
+              <p>Patient pipelines scaling over recent tracking dates</p>
+            </div>
+            <div class="chart-canvas-box" id="chart-inflow-container">
+              <!-- Canvas or SVG line chart rendered here -->
+            </div>
+          </div>
+
+          <!-- Chart 2: Common Patient Dental Concerns -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Common Patient Dental Concerns</h3>
+              <p>Categorized and indexed concerns captured from patients</p>
+            </div>
+            <div class="chart-canvas-box" id="chart-concerns-container">
+              <!-- Bar chart rendered here -->
+            </div>
+          </div>
+
+          <!-- Chart 3: Conversational Dialer Outcomes -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Conversational Dialer Outcomes</h3>
+              <p>Distribution segments computed from voice assistant runs</p>
+            </div>
+            <div class="chart-canvas-box" id="chart-outcomes-container">
+              <!-- Donut chart rendered here -->
+            </div>
+          </div>
+
+          <!-- Chart 4: Peak Preferred Scheduling Slots -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Peak Preferred Scheduling Slots</h3>
+              <p>Patient-stated timing distributions captured during voice sessions</p>
+            </div>
+            <div class="chart-canvas-box" id="chart-slots-container">
+              <!-- Hourly slot distribution rendered here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 4: AI CALLS (Calls & Transcript Inspection)
+           ================================================================ -->
+      <section class="view-container" id="view-calls">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>AI Receptionist Call Logs</h1>
+            <p>Complete historical registry of browser voice calls, durations, transcripts, and booking outcomes.</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-search">
+              <input type="text" id="calls-search" placeholder="Search by caller, phone, outcome...">
+            </div>
+            <div class="toolbar-filters">
+              <select class="select-filter" id="calls-status-filter">
+                <option value="all">All Outcomes</option>
+                <option value="completed">Completed Calls</option>
+                <option value="missed">Missed / Interrupted</option>
+              </select>
+            </div>
+          </div>
+
+          <table class="crm-table">
+            <thead>
+              <tr>
+                <th>Caller / Patient</th>
+                <th>Phone Number</th>
+                <th>Date & Time</th>
+                <th>Duration</th>
+                <th>Intent</th>
+                <th>Outcome</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="calls-table-body">
+              <!-- Populated via API -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 5: APPOINTMENTS
+           ================================================================ -->
+      <section class="view-container" id="view-appointments">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Appointments Directory</h1>
+            <p>Scheduled appointments, patient treatment types, and Google Calendar sync records.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-primary" id="btn-add-apt-table">+ New Appointment</button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-search">
+              <input type="text" id="apt-search" placeholder="Search patient name, phone, reason...">
+            </div>
+            <div class="toolbar-filters">
+              <select class="select-filter" id="apt-status-filter">
+                <option value="all">All Statuses</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="rescheduled">Rescheduled</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <select class="select-filter" id="apt-patient-type-filter">
+                <option value="all">All Patients</option>
+                <option value="New Patient">New Patient</option>
+                <option value="Existing Patient">Existing Patient</option>
+              </select>
+            </div>
+          </div>
+
+          <table class="crm-table">
+            <thead>
+              <tr>
+                <th>Patient Name</th>
+                <th>Phone Number</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Service / Reason</th>
+                <th>Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="apt-table-body">
+              <!-- Populated via API -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 6: PATIENTS
+           ================================================================ -->
+      <section class="view-container" id="view-patients">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Patients Registry</h1>
+            <p>Registered clinic patients, contact details, total visits, and last appointment dates.</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-search">
+              <input type="text" id="patients-search" placeholder="Search patient by name or phone...">
+            </div>
+          </div>
+
+          <table class="crm-table">
+            <thead>
+              <tr>
+                <th>Patient Name</th>
+                <th>Phone Number</th>
+                <th>Patient Type</th>
+                <th>Insurance</th>
+                <th>Last Visit</th>
+                <th>Total Visits</th>
+              </tr>
+            </thead>
+            <tbody id="patients-table-body">
+              <!-- Populated via API -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 7: INTEGRATIONS
+           ================================================================ -->
+      <section class="view-container" id="view-integrations">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>System Integrations & Architecture</h1>
+            <p>Live connection status across voice, speech, calendar, and automation nodes.</p>
+          </div>
+        </div>
+
+        <div class="card-panel" style="max-width: 800px;">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h3>CareVoice AI Microservices</h3>
+              <p>Continuous health verification for hackathon evaluation.</p>
+            </div>
+            <button class="btn-secondary" id="btn-recheck-integrations">Re-check Now</button>
+          </div>
+          <div class="pipeline-health-list" id="integrations-health-list">
+            <!-- Populated via API -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           VIEW 8: LEAD INBOX & FOLLOW-UPS (Unified Queues)
+           ================================================================ -->
+      <section class="view-container" id="view-leads">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Lead Inbox</h1>
+            <p>Patient inquiries and slot requests captured by Sophia awaiting clinic follow-up.</p>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="empty-state-box" id="leads-empty-state">
+            <div class="empty-icon">📥</div>
+            <h4>No Unacted Leads in Queue</h4>
+            <p>When callers inquire about clinic appointments without immediate booking, they will appear here automatically.</p>
+          </div>
+          <div id="leads-list-container"></div>
+        </div>
+      </section>
+
+      <section class="view-container" id="view-followups">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Follow-up Queue</h1>
+            <p>Interrupted calls or patient rescheduling inquiries queued for desk confirmation.</p>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="empty-state-box" id="followups-empty-state">
+            <div class="empty-icon">⏰</div>
+            <h4>No Follow-ups Pending</h4>
+            <p>All clinic calls and appointment inquiries have been handled smoothly.</p>
+          </div>
+          <div id="followups-list-container"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 1: AUTHENTICATION LOGIN WALL
+       ==================================================================== -->
+  <div class="modal-overlay" id="login-modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; flex-direction: column; gap: 6px; padding: 1.75rem 1.5rem 1rem 1.5rem;">
+        <div class="brand-icon-box" style="margin: 0 auto 6px auto;">🦷</div>
+        <h3 style="font-size: 1.25rem;">Clinic Admin Login</h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted);">CareVoice AI — Absolute Dental Las Vegas</p>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem 1.5rem 1.75rem 1.5rem;">
+        <div style="margin-bottom: 1rem; text-align: left;">
+          <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Staff Username or Clinic PIN</label>
+          <input type="text" id="login-username" value="2026" placeholder="Enter PIN (2026) or email" style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.9rem; outline: none;">
+        </div>
+        <div id="login-error-msg" style="color: var(--status-red); font-size: 0.76rem; margin-bottom: 0.75rem; display: none;"></div>
+        <button class="btn-primary" id="login-submit-btn" style="width: 100%; justify-content: center; padding: 11px; font-size: 0.9rem;">
+          Log In to Clinic CRM
+        </button>
+        <div style="margin-top: 1rem; font-size: 0.72rem; color: var(--text-light);">
+          Default Demo PIN: <strong>2026</strong> &bull; Superadmin: admin@absolutedental.com
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 2: CALL TRANSCRIPT INSPECTOR DRAWER
+       ==================================================================== -->
+  <div class="modal-overlay" id="transcript-modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-caller-title">Call Transcript</h3>
+          <p id="modal-call-meta" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Session details</p>
+        </div>
+        <button class="modal-close-btn" id="close-transcript-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 1rem;" id="modal-tool-calls-box"></div>
+        <div class="transcript-drawer" id="modal-transcript-container">
+          <!-- Conversation bubbles rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 3: CREATE APPOINTMENT (Staff Manual Booking)
+       ==================================================================== -->
+  <div class="modal-overlay" id="create-apt-modal" style="display: none;">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>+ New Dental Appointment</h3>
+        <button class="modal-close-btn" id="close-create-apt-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="create-apt-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div>
+            <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Patient Full Name</label>
+            <input type="text" id="form-patient-name" required placeholder="e.g. John Doe" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Phone Number</label>
+            <input type="tel" id="form-phone-number" required placeholder="e.g. 702-555-0199" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Appointment Date</label>
+              <input type="date" id="form-appointment-date" required style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Appointment Time</label>
+              <input type="time" id="form-appointment-time" required style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Service / Reason for Visit</label>
+            <input type="text" id="form-service" placeholder="Routine Cleaning, Tooth Pain, Dental Exam..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Patient Type</label>
+              <select id="form-patient-type" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+                <option value="Existing Patient">Existing Patient</option>
+                <option value="New Patient">New Patient</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-bottom: 3px;">Insurance</label>
+              <input type="text" id="form-insurance" placeholder="Delta Dental, Self Pay..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 0.82rem; outline: none;">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="margin-top: 0.5rem; justify-content: center; padding: 10px;">
+            Save & Sync Appointment
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="dashboard.js?v=20260929_fix5"></script>
+</body>
+</html>

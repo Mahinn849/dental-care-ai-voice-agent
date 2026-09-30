@@ -1,0 +1,15 @@
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+.env
+.env.*
+scratch
+*.db
+clinic_crm.db
+.DS_Store
+Thumbs.db
