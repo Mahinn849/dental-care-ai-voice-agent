@@ -110,6 +110,55 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);
         """)
     print("[CRM DB] Schema initialized successfully at:", CRM_DB_PATH)
+    ensure_seed_data()
+
+
+def ensure_seed_data():
+    """Populates initial clinic appointments, call history, and patients if database is fresh."""
+    import json
+    seed_file = Path(__file__).resolve().parent / "seed_data.json"
+    if not seed_file.exists():
+        return
+
+    try:
+        with open(seed_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        with get_db() as conn:
+            # Seed appointments if table is empty
+            apt_count = conn.execute("SELECT COUNT(*) FROM appointments").fetchone()[0]
+            if apt_count == 0 and "appointments" in data:
+                for apt in data["appointments"]:
+                    cols = [k for k in apt.keys() if k != "id"]
+                    placeholders = ", ".join(["?"] * len(cols))
+                    col_names = ", ".join(cols)
+                    values = [apt[k] for k in cols]
+                    conn.execute(f"INSERT INTO appointments ({col_names}) VALUES ({placeholders})", values)
+                print(f"[CRM DB] Automatically seeded {len(data['appointments'])} clinic appointments.")
+
+            # Seed patients if table is empty
+            pts_count = conn.execute("SELECT COUNT(*) FROM patients").fetchone()[0]
+            if pts_count == 0 and "patients" in data:
+                for pt in data["patients"]:
+                    cols = [k for k in pt.keys() if k != "id"]
+                    placeholders = ", ".join(["?"] * len(cols))
+                    col_names = ", ".join(cols)
+                    values = [pt[k] for k in cols]
+                    conn.execute(f"INSERT OR IGNORE INTO patients ({col_names}) VALUES ({placeholders})", values)
+                print(f"[CRM DB] Automatically seeded {len(data['patients'])} patient records.")
+
+            # Seed calls if table is empty
+            calls_count = conn.execute("SELECT COUNT(*) FROM calls").fetchone()[0]
+            if calls_count == 0 and "calls" in data:
+                for cl in data["calls"]:
+                    cols = [k for k in cl.keys() if k != "id"]
+                    placeholders = ", ".join(["?"] * len(cols))
+                    col_names = ", ".join(cols)
+                    values = [cl[k] for k in cols]
+                    conn.execute(f"INSERT OR IGNORE INTO calls ({col_names}) VALUES ({placeholders})", values)
+                print(f"[CRM DB] Automatically seeded {len(data['calls'])} call history logs.")
+    except Exception as e:
+        print(f"[CRM DB Seed Warning] Failed to populate initial seed data: {e}")
 
 
 if __name__ == "__main__":
