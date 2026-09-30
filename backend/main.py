@@ -34,7 +34,9 @@ except Exception as e:
 
 app = FastAPI(title="CareVoice AI - Healthcare Voice Receptionist & Clinic CRM")
 
-# Enable CORS for browser access
+# CORS Configuration:
+# Permissive origins enabled for seamless hackathon evaluation across diverse demo environments.
+# Note for production: restrict `allow_origins` to specific clinic domain(s) (e.g., https://clinic.domain.com).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

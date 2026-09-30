@@ -1,6 +1,10 @@
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# Add project root to sys.path
+root_dir = Path(__file__).resolve().parent.parent.parent
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 import asyncio
 import json
@@ -12,6 +16,7 @@ from backend.tools.appointment_tools import (
     N8N_DENTAL_CLINIC_APPOINTMENT_WEBHOOK_URL,
 )
 from backend.services.browser_voice_service import build_system_prompt, GREETING_TEXT
+
 
 def test_tools_schema():
     assert len(APPOINTMENT_TOOLS) == 2, f"Expected 2 tools, got {len(APPOINTMENT_TOOLS)}"
@@ -50,11 +55,13 @@ def test_tools_schema():
     assert set(clinic_fn["parameters"]["required"]) == {"type", "callerName", "phoneNumber"}
     print("PASS: dental-clinic-appointment schema matches exactly 13 parameters with 3 required.")
 
+
 def test_webhooks():
     assert "dental_check_appointment_availability" in N8N_DENTAL_CHECK_AVAILABILITY_WEBHOOK_URL
     assert "dental-clinic-appointment" in N8N_DENTAL_CLINIC_APPOINTMENT_WEBHOOK_URL
     print(f"PASS: Webhook 1 URL = {N8N_DENTAL_CHECK_AVAILABILITY_WEBHOOK_URL}")
     print(f"PASS: Webhook 2 URL = {N8N_DENTAL_CLINIC_APPOINTMENT_WEBHOOK_URL}")
+
 
 def test_prompt_and_greeting():
     prompt = build_system_prompt()
@@ -66,8 +73,9 @@ def test_prompt_and_greeting():
     assert "Absolute Dental" in GREETING_TEXT
     print("PASS: System prompt and greeting are for Absolute Dental Clinic in Las Vegas.")
 
+
 if __name__ == "__main__":
     test_tools_schema()
     test_webhooks()
     test_prompt_and_greeting()
-    print("\nALL DENTAL CLINIC INTEGRATION TESTS PASSED SUCCESSFULLY!")
+    print("\nALL DENTAL CLINIC SCHEMA TESTS PASSED SUCCESSFULLY!")
