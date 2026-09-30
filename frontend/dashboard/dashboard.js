@@ -10,7 +10,7 @@
   // --- Constants & Config ---
   const API_BASE = "/api/crm";
   const TOKEN_KEY = "carevoice_crm_token";
-  const LIVE_SYNC_INTERVAL_MS = 20000; // 20s
+  const LIVE_SYNC_INTERVAL_MS = 10000; // 10s real-time sync with Google Calendar
 
   // --- Global State ---
   const state = {
@@ -1031,7 +1031,7 @@
     if (!apts || apts.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7">
+          <td colspan="8">
             <div class="empty-state-box">
               <div class="empty-icon">📋</div>
               <h4>No Appointments Scheduled Yet</h4>
@@ -1059,6 +1059,11 @@
           <td>${escapeHtml(apt.service || "Routine Treatment")}</td>
           <td><span class="status-chip" style="background:#F8FAFC; color:#475569;">${escapeHtml(apt.patient_type || "Existing")}</span></td>
           <td>${statusBadge}</td>
+          <td style="text-align: center;">
+            <button class="btn-table-action-delete" data-id="${apt.id}" data-name="${escapeHtml(apt.patient_name)}" title="Delete appointment from CRM">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </td>
         </tr>
       `;
       })
@@ -1325,6 +1330,45 @@
       $("#create-apt-modal").style.display = "none";
     });
     $("#create-apt-form")?.addEventListener("submit", handleCreateAppointment);
+
+    // Purge test records / Clean slate
+    $("#btn-purge-test-data")?.addEventListener("click", async () => {
+      if (confirm("Reset CRM database to Clean Slate?\n\nThis will remove previous test records so the CRM starts 100% clean and accurately reflects real-time Google Calendar and Google Sheet data.")) {
+        try {
+          await crmFetch("/appointments/purge-test-data", { method: "POST" });
+          alert("Clean Slate initialized!\n\nAll test records removed. Now syncing live with Google Calendar.");
+          loadAppointments();
+          loadCalendar();
+          loadOverview();
+          loadCalls();
+          loadPatients();
+        } catch (err) {
+          alert("Reset failed: " + err.message);
+        }
+      }
+    });
+
+    // Delete appointment handler via table delegation
+    $("#apt-table-body")?.addEventListener("click", async (e) => {
+      const delBtn = e.target.closest(".btn-table-action-delete");
+      if (!delBtn) return;
+      const aptId = delBtn.dataset.id;
+      const patientName = delBtn.dataset.name || "this patient";
+      if (!aptId) return;
+
+      if (confirm(`Are you sure you want to delete the appointment for ${patientName}?`)) {
+        try {
+          delBtn.disabled = true;
+          await crmFetch(`/appointments/${aptId}`, { method: "DELETE" });
+          loadAppointments();
+          loadCalendar();
+          loadOverview();
+        } catch (err) {
+          alert("Failed to delete appointment: " + err.message);
+          delBtn.disabled = false;
+        }
+      }
+    });
 
     // 5. Modals: Transcript Inspector
     $("#close-transcript-modal")?.addEventListener("click", () => {

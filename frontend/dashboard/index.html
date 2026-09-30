@@ -533,7 +533,8 @@
             <h1>Appointments Directory</h1>
             <p>Scheduled appointments, patient treatment types, and Google Calendar sync records.</p>
           </div>
-          <div class="view-actions">
+          <div class="view-actions" style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn-outline-danger" id="btn-purge-test-data" title="Purge old test appointments and start clean">🧹 Clean Slate / Reset</button>
             <button class="btn-primary" id="btn-add-apt-table">+ New Appointment</button>
           </div>
         </div>
@@ -568,6 +569,7 @@
                 <th>Service / Reason</th>
                 <th>Type</th>
                 <th>Status</th>
+                <th style="text-align: center; width: 80px;">Action</th>
               </tr>
             </thead>
             <tbody id="apt-table-body">

@@ -105,6 +105,7 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);
         CREATE INDEX IF NOT EXISTS idx_appointments_phone ON appointments(phone_number);
         CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+        CREATE INDEX IF NOT EXISTS idx_appointments_gcal ON appointments(google_calendar_event_id);
         CREATE INDEX IF NOT EXISTS idx_calls_session ON calls(session_id);
         CREATE INDEX IF NOT EXISTS idx_calls_created ON calls(created_at);
         CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);

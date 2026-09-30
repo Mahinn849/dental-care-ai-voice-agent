@@ -16,6 +16,9 @@ from backend.crm.crm_service import (
     get_patients_directory,
     get_analytics_metrics,
     create_appointment_manual,
+    delete_appointment_record,
+    purge_all_test_appointments,
+    sync_google_calendar_event,
 )
 
 router = APIRouter(prefix="/api/crm", tags=["clinic-crm"])
@@ -144,6 +147,26 @@ async def crm_create_appointment(
         raise HTTPException(status_code=400, detail=str(ve))
 
 
+@router.delete("/appointments/{appointment_id}")
+async def crm_delete_appointment(
+    appointment_id: int,
+    current_user: dict = Depends(get_current_admin),
+):
+    """Deletes an appointment by ID."""
+    try:
+        res = delete_appointment_record(appointment_id)
+        return {"status": "success", "data": res}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@router.post("/appointments/purge-test-data")
+async def crm_purge_test_data(current_user: dict = Depends(get_current_admin)):
+    """Purges all test appointments, calls, and patients so CRM starts 100% clean."""
+    res = purge_all_test_appointments()
+    return {"status": "success", "data": res}
+
+
 @router.get("/calendar")
 async def crm_calendar(
     month: Optional[str] = Query(None, description="Month in YYYY-MM format"),
@@ -242,4 +265,28 @@ async def crm_sync_system(current_user: dict = Depends(get_current_admin)):
         "status": "success",
         "synced_at": "Just now",
         "pipeline": health,
+    }
+
+
+# ==============================================================================
+# Inbound Webhook for Real-Time Google Calendar & Google Sheets Sync
+# ==============================================================================
+
+@router.post("/webhooks/google-calendar-sync")
+async def crm_google_calendar_webhook(request: Request):
+    """
+    Public webhook for n8n Google Calendar / Google Sheets trigger.
+    Automatically upserts or deletes appointments in real time when modified or created in Google Calendar.
+    """
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    print(f"[CRM Webhook] Received Google Calendar event: {payload}")
+    result = sync_google_calendar_event(payload)
+    return {
+        "status": "success",
+        "message": "Calendar event synced with CRM database",
+        "data": result,
     }

@@ -559,3 +559,250 @@ def create_appointment_manual(data: dict) -> Dict[str, Any]:
             """, (name, phone, patient_type, insurance, apt_date))
 
     return {"status": "success", "id": new_id, "message": f"Appointment created for {name} on {apt_date} at {apt_time}"}
+
+
+def delete_appointment_record(appointment_id: int) -> Dict[str, Any]:
+    """Deletes an appointment record and logs action."""
+    with get_db() as conn:
+        existing = conn.execute("SELECT * FROM appointments WHERE id = ?", (appointment_id,)).fetchone()
+        if not existing:
+            raise ValueError(f"Appointment ID {appointment_id} not found.")
+
+        conn.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+        conn.execute("""
+        INSERT INTO appointment_actions (appointment_id, action_type, action_result)
+        VALUES (?, 'delete_manual', ?)
+        """, (appointment_id, json.dumps({"deleted_patient": existing["patient_name"], "date": existing["appointment_date"]})))
+
+    return {"status": "success", "message": f"Appointment {appointment_id} deleted successfully."}
+
+
+def purge_all_test_appointments() -> Dict[str, Any]:
+    """
+    Completely purges all test appointments, calls, and patients.
+    Gives a clean slate matching active real Google Calendar / Sheet data.
+    """
+    with get_db() as conn:
+        apt_count = conn.execute("SELECT COUNT(*) FROM appointments").fetchone()[0]
+        call_count = conn.execute("SELECT COUNT(*) FROM calls").fetchone()[0]
+        pat_count = conn.execute("SELECT COUNT(*) FROM patients").fetchone()[0]
+
+        conn.execute("DELETE FROM appointments;")
+        conn.execute("DELETE FROM appointment_actions;")
+        conn.execute("DELETE FROM calls;")
+        conn.execute("DELETE FROM patients;")
+
+        try:
+            conn.execute("DELETE FROM sqlite_sequence WHERE name IN ('appointments', 'appointment_actions', 'calls', 'patients');")
+        except Exception:
+            pass
+
+    print(f"[CRM Service] Purged {apt_count} appointments, {call_count} calls, {pat_count} patients for clean slate.")
+    return {
+        "status": "success",
+        "purged_appointments": apt_count,
+        "purged_calls": call_count,
+        "purged_patients": pat_count,
+        "message": "CRM database successfully purged. Clean slate initialized."
+    }
+
+
+def parse_google_calendar_event(data: dict) -> Dict[str, Any]:
+    """
+    Parses Google Calendar event payload (from n8n webhook or direct trigger).
+    Extracts action, event_id, patient_name, phone_number, date, time, service.
+    """
+    action = (data.get("action") or data.get("event") or "").lower()
+    status = (data.get("status") or "").lower()
+    event_id = str(data.get("google_calendar_event_id") or data.get("id") or "").strip()
+
+    if status in ("cancelled", "deleted") or action in ("delete", "cancelled", "deleted"):
+        return {
+            "action": "delete",
+            "event_id": event_id,
+            "patient_name": (data.get("patient_name") or data.get("summary") or "").strip().upper(),
+            "phone_number": (data.get("phone_number") or data.get("phone") or "").strip(),
+            "appointment_date": str(data.get("appointment_date") or data.get("date") or ""),
+            "appointment_time": str(data.get("appointment_time") or data.get("time") or ""),
+        }
+
+    # Extract date & time
+    start = data.get("start")
+    apt_date = data.get("appointment_date") or data.get("date") or ""
+    apt_time = data.get("appointment_time") or data.get("time") or ""
+
+    if isinstance(start, dict):
+        dt_str = start.get("dateTime") or start.get("date") or ""
+        if dt_str:
+            if "T" in dt_str:
+                dt_part, tm_part = dt_str.split("T", 1)
+                apt_date = dt_part
+                apt_time = tm_part[:5]
+            else:
+                apt_date = dt_str
+    elif isinstance(start, str) and start:
+        if "T" in start:
+            apt_date, tm_part = start.split("T", 1)
+            apt_time = tm_part[:5]
+        else:
+            apt_date = start
+
+    # Extract patient name & service from summary
+    summary = str(data.get("summary") or data.get("patient_name") or "").strip()
+    patient_name = str(data.get("patient_name") or "").strip()
+    service = str(data.get("service") or "").strip()
+
+    if summary and not patient_name:
+        if " - " in summary:
+            parts = summary.split(" - ", 1)
+            patient_name = parts[0].strip().upper()
+            if not service:
+                service = parts[1].strip()
+        elif ":" in summary:
+            parts = summary.split(":", 1)
+            patient_name = parts[1].strip().upper()
+        else:
+            patient_name = summary.strip().upper()
+
+    if not service:
+        service = "General Dentistry"
+
+    # Description parsing for phone, insurance, patient_type
+    desc = str(data.get("description") or "")
+    phone = str(data.get("phone_number") or data.get("phone") or "").strip()
+    patient_type = data.get("patient_type") or "Existing Patient"
+    insurance = data.get("insurance") or "Self Pay"
+
+    if desc and not phone:
+        m_phone = re.search(r'(?i)phone(?:\s*number)?[:\s]+([+\d\s\(\)-]+)', desc)
+        if m_phone:
+            phone = m_phone.group(1).strip()
+        else:
+            m_digits = re.search(r'(\+?\d[\d\s\(\)-]{7,}\d)', desc)
+            if m_digits:
+                phone = m_digits.group(1).strip()
+
+    if desc and "new patient" in desc.lower():
+        patient_type = "New Patient"
+
+    return {
+        "action": "upsert",
+        "event_id": event_id,
+        "patient_name": patient_name or "PATIENT",
+        "phone_number": phone or "N/A",
+        "appointment_date": str(apt_date),
+        "appointment_time": str(apt_time),
+        "service": service,
+        "patient_type": patient_type,
+        "insurance": insurance,
+        "status": "confirmed",
+    }
+
+
+def sync_google_calendar_event(payload: dict) -> Dict[str, Any]:
+    """
+    Synchronizes an incoming Google Calendar / Google Sheets event into the CRM database.
+    Supports single event object or list of events.
+    """
+    if isinstance(payload, list):
+        results = [sync_google_calendar_event(item) for item in payload]
+        return {"status": "success", "synced_count": len(results), "items": results}
+    if "events" in payload and isinstance(payload["events"], list):
+        results = [sync_google_calendar_event(item) for item in payload["events"]]
+        return {"status": "success", "synced_count": len(results), "items": results}
+
+    parsed = parse_google_calendar_event(payload)
+    action = parsed.get("action", "upsert")
+    event_id = parsed.get("event_id")
+    p_name = parsed.get("patient_name") or "PATIENT"
+    phone = parsed.get("phone_number") or "N/A"
+    apt_date = parsed.get("appointment_date") or ""
+    apt_time = parsed.get("appointment_time") or ""
+    service = parsed.get("service") or "General Dentistry"
+    p_type = parsed.get("patient_type") or "Existing Patient"
+    insurance = parsed.get("insurance") or "Self Pay"
+
+    with get_db() as conn:
+        if action == "delete":
+            deleted_id = None
+            if event_id:
+                row = conn.execute("SELECT id FROM appointments WHERE google_calendar_event_id = ?", (event_id,)).fetchone()
+                if row:
+                    deleted_id = row["id"]
+                    conn.execute("DELETE FROM appointments WHERE id = ?", (deleted_id,))
+            if not deleted_id and apt_date and apt_time:
+                row = conn.execute(
+                    "SELECT id FROM appointments WHERE appointment_date = ? AND appointment_time = ?",
+                    (apt_date, apt_time)
+                ).fetchone()
+                if row:
+                    deleted_id = row["id"]
+                    conn.execute("DELETE FROM appointments WHERE id = ?", (deleted_id,))
+
+            conn.execute("""
+            INSERT INTO appointment_actions (appointment_id, action_type, action_result)
+            VALUES (?, 'calendar_delete_sync', ?)
+            """, (deleted_id, json.dumps(parsed)))
+            return {"status": "success", "action": "delete", "appointment_id": deleted_id}
+
+        # Otherwise upsert
+        target_id = None
+        if event_id:
+            row = conn.execute("SELECT id FROM appointments WHERE google_calendar_event_id = ?", (event_id,)).fetchone()
+            if row:
+                target_id = row["id"]
+
+        if not target_id and apt_date and apt_time:
+            # Check by date and time
+            row = conn.execute(
+                "SELECT id FROM appointments WHERE appointment_date = ? AND appointment_time = ? AND (phone_number = ? OR patient_name = ?)",
+                (apt_date, apt_time, phone, p_name)
+            ).fetchone()
+            if row:
+                target_id = row["id"]
+
+        if target_id:
+            # Update existing
+            conn.execute("""
+            UPDATE appointments
+            SET patient_name = ?, phone_number = ?, appointment_date = ?, appointment_time = ?,
+                service = ?, patient_type = ?, insurance = ?, status = 'confirmed',
+                google_calendar_event_id = COALESCE(?, google_calendar_event_id),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            """, (p_name, phone, apt_date, apt_time, service, p_type, insurance, event_id or None, target_id))
+            apt_id = target_id
+        else:
+            # Insert new appointment
+            cur = conn.execute("""
+            INSERT INTO appointments (
+                patient_name, phone_number, appointment_date, appointment_time,
+                service, patient_type, reason_for_visit, insurance, status, google_calendar_event_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?)
+            """, (p_name, phone, apt_date, apt_time, service, p_type, service, insurance, event_id or None))
+            apt_id = cur.lastrowid
+
+        # Upsert patient record
+        if phone and phone != "N/A":
+            p = conn.execute("SELECT id FROM patients WHERE phone = ?", (phone,)).fetchone()
+            if p:
+                conn.execute("UPDATE patients SET last_visit = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (apt_date, p["id"]))
+            else:
+                conn.execute("""
+                INSERT INTO patients (name, phone, patient_type, insurance, last_visit, total_visits)
+                VALUES (?, ?, ?, ?, ?, 1)
+                """, (p_name, phone, p_type, insurance, apt_date))
+
+        conn.execute("""
+        INSERT INTO appointment_actions (appointment_id, action_type, action_result)
+        VALUES (?, 'calendar_upsert_sync', ?)
+        """, (apt_id, json.dumps(parsed)))
+
+    return {
+        "status": "success",
+        "action": "upsert",
+        "appointment_id": apt_id,
+        "patient_name": p_name,
+        "date": apt_date,
+        "time": apt_time,
+    }

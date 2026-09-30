@@ -1323,3 +1323,48 @@ body {
   color: var(--text-muted);
   max-width: 320px;
 }
+
+/* ==========================================================================
+   DANGER & ACTION BUTTONS
+   ========================================================================== */
+.btn-outline-danger {
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #E11D48;
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-outline-danger:hover {
+  background: #FFE4E6;
+  border-color: #FDA4AF;
+  color: #BE123C;
+  transform: translateY(-1px);
+}
+
+.btn-table-action-delete {
+  background: transparent;
+  border: 1px solid #E2E8F0;
+  color: #94A3B8;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-table-action-delete:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FECACA;
+  transform: scale(1.05);
+}
