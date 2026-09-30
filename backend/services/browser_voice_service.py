@@ -93,6 +93,7 @@ You are **Sophia**, an AI front desk receptionist for Absolute dental clinic in 
 2. **Identify** the patient's intent — book, reschedule, cancel, or general question
 3. **Handle** the request — collect information one question at a time and call `dental-clinic-appointment` or `dental_check_appointment_availability`
 4. **Close** — confirm the outcome and ask if there is anything else
+5. **Goodbye & End Call** — when caller says "bye", "goodbye", "Allah hafiz", or indicates they are finished, give a warm goodbye without asking further questions. The call will automatically disconnect.
 
 ---
 
@@ -446,6 +447,17 @@ Immediately call `dental-clinic-appointment` with:
 
 ---
 
+## Step 6: Closing & Goodbyes (Auto Call End)
+
+When the caller says "bye", "goodbye", "good bye", "Allah hafiz", "thank you bye", "that's all thank you", "no that is all", or indicates they are finished:
+- Do NOT ask another question. Do NOT ask "is there anything else I can help you with?".
+- Deliver a brief, warm, polite closing farewell:
+  - English: "Thank you for calling Absolute Dental. Have a wonderful day. Goodbye!"
+  - Urdu/Hindi/Roman Urdu (if caller spoke Urdu): "Absolute Dental mein call karne ka bohat shukriya. Apna khayal rakhiyega, Allah Hafiz!"
+  - Spanish: "¡Gracias por llamar a Absolute Dental! Que tenga un excelente día. ¡Hasta luego!"
+
+---
+
 ## Human Transfer
 
 If the patient insists on speaking to a human, provide a natural variation of:
@@ -498,6 +510,44 @@ If the patient says "Hold on," "One moment," "Please wait" (or in Spanish, "Espe
 
 NO_RESPONSE_NEEDED
 """
+
+
+def is_farewell_turn(user_text: str, assistant_response: str = "") -> bool:
+    """Detects if caller is saying goodbye or assistant is delivering closing farewell."""
+    import re
+    u_clean = re.sub(r"[^\w\s]", "", (user_text or "").lower()).strip()
+
+    # Common user farewell phrases in English, Urdu/Roman Urdu, and common STT homophones/typos
+    user_farewells = [
+        r"\b(bye|goodbye|good bye|good byte|good by|bye bye|byebye|bye now)\b",
+        r"\b(allah hafiz|allahhafiz|khuda hafiz|alvida)\b",
+        r"\b(thank you bye|thanks bye|ok bye|okay bye|alright bye)\b",
+        r"\b(see you|take care)\b",
+        r"\b(thats all|that is all|thatll be all|that will be all)\b",
+        r"\b(no thats all|no that is all|no thank you thats all|no thanks thats all)\b",
+        r"\b(nothing else thanks|nothing else thank you|no nothing else)\b",
+        r"\b(bas shukriya|bas itna hi|nahi bas shukriya|theek hai bye|achha bye)\b",
+    ]
+    if any(re.search(pat, u_clean) for pat in user_farewells):
+        return True
+
+    if assistant_response:
+        a_clean = re.sub(r"[^\w\s]", "", assistant_response.lower()).strip()
+        assistant_farewells = [
+            r"\b(goodbye|good bye|bye)\b",
+            r"\b(allah hafiz|khuda hafiz|alvida)\b",
+            r"\b(have a (great|wonderful|good|nice) day)\b",
+            r"\b(take care)\b",
+            r"\b(hasta luego|adios)\b",
+        ]
+        is_assistant_closing = any(re.search(pat, a_clean) for pat in assistant_farewells)
+        has_question = "?" in assistant_response or any(
+            q in a_clean for q in ["anything else", "help you with", "what can i", "would you like"]
+        )
+        if is_assistant_closing and not has_question:
+            return True
+
+    return False
 
 
 def extract_conversational_chunk(buffer: str, is_initial_turn_chunk: bool = False):
@@ -1196,6 +1246,16 @@ class BrowserVoiceSession:
 
             if full_response.strip():
                 self.conversation_history.append({"role": "assistant", "content": full_response.strip()})
+
+            # Check if this turn concluded with a farewell / goodbye
+            if is_farewell_turn(user_text, full_response):
+                print(f"[Auto Hangup] Detected goodbye/farewell from caller ('{user_text}') or Sophia ('{full_response.strip()}'). Sending call_ended event.")
+                await asyncio.sleep(0.3)
+                await self.send_to_client({
+                    "type": "call_ended",
+                    "reason": "farewell",
+                    "message": "Call completed. Thank you for calling Absolute Dental!",
+                })
 
         except asyncio.CancelledError:
             await sentence_queue.put(None)

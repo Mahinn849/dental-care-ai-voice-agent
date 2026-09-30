@@ -53,13 +53,25 @@
     const parts = timeStr.split(":");
     if (parts.length >= 2) {
       let hours = parseInt(parts[0], 10);
-      const minutes = parts[1];
+      const minutes = (parts[1] || "00").slice(0, 2);
       const ampm = hours >= 12 ? "PM" : "AM";
       hours = hours % 12;
       hours = hours ? hours : 12; // 0 becomes 12
-      return `${hours}:${minutes} ${ampm}`;
+      const hoursPadded = hours < 10 ? `0${hours}` : `${hours}`;
+      return `${hoursPadded}:${minutes} ${ampm}`;
     }
     return timeStr;
+  }
+
+  function formatPatientName(name) {
+    if (!name) return "Patient";
+    const cleaned = String(name).trim();
+    if (!cleaned) return "Patient";
+    return cleaned
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
   }
 
   function formatDate(dateStr) {
@@ -482,7 +494,9 @@
       const dNum = prevMonthLastDay - i;
       cellsHtml += `
         <div class="cal-day-cell other-month">
-          <div class="cal-day-number">${dNum}</div>
+          <div class="cal-day-header">
+            <span class="cal-day-number">${dNum}</span>
+          </div>
           <div class="cal-events-list"></div>
         </div>
       `;
@@ -493,29 +507,42 @@
       const dStr = `${year}-${monthIdx + 1 < 10 ? "0" : ""}${monthIdx + 1}-${day < 10 ? "0" : ""}${day}`;
       const dayEvents = eventsByDate[dStr] || [];
       const isToday = isCurrentMonth && day === todayDateNum;
-      const todayClass = isToday ? "is-today" : "";
+      const todayClass = isToday ? "is-today today" : "";
 
       let chipsHtml = "";
-      dayEvents.forEach((ev) => {
+      dayEvents.forEach((ev, idx) => {
         let chipClass = "chip-green";
         const st = (ev.status || "").toLowerCase();
-        if (st.includes("pending") || st.includes("resched")) chipClass = "chip-amber";
-        else if (st.includes("complete")) chipClass = "chip-blue";
-        else if (st.includes("cancel")) chipClass = "chip-red";
+        if (st.includes("cancel")) {
+          chipClass = "chip-red";
+        } else if (st.includes("pending") || st.includes("resched")) {
+          chipClass = "chip-amber";
+        } else if (st.includes("complete")) {
+          chipClass = "chip-blue";
+        } else {
+          // Smooth cyclic pastel palette matching reference design: Green -> Blue -> Amber -> Purple
+          const pastelCycle = ["chip-green", "chip-blue", "chip-amber", "chip-purple"];
+          chipClass = pastelCycle[idx % pastelCycle.length];
+        }
 
         const timeLabel = formatTime(ev.time);
-        const nameLabel = escapeHtml(ev.patient_name || "Patient");
+        const rawName = ev.patient_name || "Patient";
+        const displayName = formatPatientName(rawName);
 
         chipsHtml += `
-          <div class="cal-event-chip ${chipClass}" title="${nameLabel} — ${timeLabel} (${escapeHtml(ev.service || "Appointment")})">
-            ${timeLabel} ${nameLabel}
+          <div class="cal-event-chip ${chipClass}" data-apt-id="${ev.id || ''}" data-patient="${escapeHtml(displayName)}" title="${escapeHtml(displayName)} — ${timeLabel} (${escapeHtml(ev.service || "Appointment")})">
+            <span class="apt-chip-name">${escapeHtml(displayName)}</span>
+            <span class="apt-chip-time">${timeLabel}</span>
           </div>
         `;
       });
 
       cellsHtml += `
         <div class="cal-day-cell ${todayClass}">
-          <div class="cal-day-number">${day}</div>
+          <div class="cal-day-header">
+            <span class="cal-day-number ${isToday ? "today-num" : ""}">${day}</span>
+            ${isToday ? '<span class="today-badge">TODAY</span>' : ""}
+          </div>
           <div class="cal-events-list">
             ${chipsHtml}
           </div>
@@ -529,7 +556,9 @@
     for (let day = 1; day <= remainingCells; day++) {
       cellsHtml += `
         <div class="cal-day-cell other-month">
-          <div class="cal-day-number">${day}</div>
+          <div class="cal-day-header">
+            <span class="cal-day-number">${day}</span>
+          </div>
           <div class="cal-events-list"></div>
         </div>
       `;
@@ -1267,6 +1296,21 @@
     $("#cal-today-btn")?.addEventListener("click", () => {
       state.calendarDate = new Date();
       loadCalendar();
+    });
+
+    // Calendar Event Chip Click -> inspect in appointments table
+    $("#cal-body-grid")?.addEventListener("click", (e) => {
+      const chip = e.target.closest(".cal-event-chip");
+      if (!chip) return;
+      const patient = chip.getAttribute("data-patient") || "";
+      if (patient) {
+        switchTab("appointments");
+        const aptSearch = $("#apt-search");
+        if (aptSearch) {
+          aptSearch.value = patient;
+          loadAppointments();
+        }
+      }
     });
 
     // 4. Modals: Create Appointment

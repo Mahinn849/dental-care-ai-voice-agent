@@ -200,6 +200,11 @@ class PcmStreamPlayer {
           this.isBuffering = true;
           this.nextStartTime = 0;
           if (this.onSpeakingChange) this.onSpeakingChange(false);
+          if (this.onPlaybackFinished) {
+            const cb = this.onPlaybackFinished;
+            this.onPlaybackFinished = null;
+            cb();
+          }
         }
       };
     }
@@ -210,6 +215,9 @@ class PcmStreamPlayer {
     this.totalQueuedDuration = 0;
     this.isBuffering = true;
     this.nextStartTime = 0;
+    if (this.onPlaybackFinished) {
+      this.onPlaybackFinished = null;
+    }
     this.activeSources.forEach((src) => {
       try {
         src.stop();
@@ -746,6 +754,9 @@ async function startCall() {
           console.log('🛑 Caller interrupted Sophia; stopping audio playback.');
           stopAllPlayback();
           handleAssistantTextEnd();
+        } else if (msg.type === 'call_ended') {
+          console.log('📞 Server requested call completion:', msg.reason || 'farewell');
+          handleCallEnded(msg);
         } else if (msg.type === 'error') {
           showError(msg.message || 'An error occurred in the voice pipeline.');
           handleAssistantTextEnd();
@@ -773,8 +784,55 @@ async function startCall() {
   }
 }
 
+// Auto Hangup Logic on Goodbye / Farewell
+let autoHangupTimer = null;
+
+function handleCallEnded(msg) {
+  const noticeMsg = msg.message || 'Call completed. Goodbye!';
+  console.log('📞 [Auto Hangup] Server signaled call completion:', msg.reason || 'farewell');
+
+  if (callCaptionDesc) {
+    callCaptionDesc.textContent = noticeMsg;
+  }
+
+  const triggerHangup = () => {
+    if (autoHangupTimer) {
+      clearTimeout(autoHangupTimer);
+      autoHangupTimer = null;
+    }
+    autoHangupTimer = setTimeout(() => {
+      if (isCallActive) {
+        console.log('👋 [Auto Hangup] Ending call session after goodbye speech finished playing.');
+        endCall();
+      }
+    }, 700); // 700ms natural conversational pause after last audio chunk
+  };
+
+  if (pcmPlayer && (pcmPlayer.isPlaying || pcmPlayer.audioQueue.length > 0 || pcmPlayer.activeSources.length > 0)) {
+    console.log('⏳ [Auto Hangup] Waiting for farewell speech audio to complete playback...');
+    pcmPlayer.onPlaybackFinished = () => {
+      triggerHangup();
+    };
+    // Safety max timer in case audio playback callback doesn't fire
+    const safetyMs = Math.max(3500, Math.round(((pcmPlayer.totalQueuedDuration || 0) + 3.5) * 1000));
+    autoHangupTimer = setTimeout(() => {
+      if (isCallActive) triggerHangup();
+    }, safetyMs);
+  } else {
+    triggerHangup();
+  }
+}
+
 // End Call Logic
 function endCall() {
+  if (autoHangupTimer) {
+    clearTimeout(autoHangupTimer);
+    autoHangupTimer = null;
+  }
+  if (pcmPlayer) {
+    pcmPlayer.onPlaybackFinished = null;
+  }
+
   isCallActive = false;
   stopCallTimer();
 
